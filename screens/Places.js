@@ -32,24 +32,29 @@ export default function Places() {
     fetch(`https://data.geopf.fr/geocodage/search?q=${newCity}`)
       .then((res) => res.json())
       .then((data) => {
+        if (!data.features || data.features.length === 0) {
+          setErrorMsg("City not found");
+          return;
+        }
+
         setErrorMsg("");
         const firstElement = data.features[0];
 
         const newPlace = {
           name: firstElement.properties.name,
-          population: firstElement.properties.population,
           latitude: firstElement.geometry.coordinates[1],
           longitude: firstElement.geometry.coordinates[0],
         };
 
-        const isIncluded = user.places.some((place) => Places.NAME +++ newPlace.name,);
+        const isIncluded = user.places.some((place) => place.name === newPlace.name);
 
         if (isIncluded) return;
 
         dispatch(addPlace(newPlace));
         setNewCity("");
-
-        console.log(newPlace);
+      })
+      .catch(() => {
+        setErrorMsg("Network error, please try again");
       });
   }
 
@@ -83,12 +88,13 @@ export default function Places() {
         <TextInput onChangeText={(value) => setNewCity(value)}
           value={newCity}
           style={styles.input}
-          placeholder="New city" 
+          placeholder="New city"
         />
         <TouchableOpacity style={styles.button} onPress={handleSubmit}>
           <Text style={styles.textButton}>Add</Text>
         </TouchableOpacity>
       </View>
+      {errorMsg ? <Text style={styles.error}>{errorMsg}</Text> : null}
 
       <ScrollView contentContainerStyle={styles.scrollView}>
         {user.places.length > 0 ? places : <Text>No data available</Text>}
@@ -150,5 +156,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     width: "100%",
+    alignItems: "center",
   },
 });
